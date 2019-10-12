@@ -1,0 +1,130 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.bbs.dao.CollectDao">
+
+    <resultMap type="com.example.bbs.entity.Post" id="TPostMap">
+        <result property="id" column="id" jdbcType="INTEGER"/>
+        <result property="title" column="title" jdbcType="VARCHAR"/>
+        <result property="userId" column="user_id" jdbcType="INTEGER"/>
+        <result property="sectionId" column="section_id" jdbcType="INTEGER"/>
+        <result property="replyNum" column="reply_num" jdbcType="INTEGER"/>
+        <result property="viewNum" column="view_num" jdbcType="INTEGER"/>
+        <result property="approveNum" column="approve_num" jdbcType="INTEGER"/>
+        <result property="collectNum" column="collect_num" jdbcType="INTEGER"/>
+        <result property="content" column="content" jdbcType="VARCHAR"/>
+        <result property="postTime" column="post_time" jdbcType="TIMESTAMP"/>
+        <result property="updateTime" column="update_time" jdbcType="TIMESTAMP"/>
+        <result property="image" column="image" jdbcType="VARCHAR"/>
+        <result property="video" column="video" jdbcType="VARCHAR"/>
+        <result property="type" column="type" jdbcType="INTEGER"/>
+        <result property="status" column="status" jdbcType="INTEGER"/>
+    </resultMap>
+
+    <resultMap type="com.example.bbs.entity.User" id="TUserMap">
+        <result property="id" column="id" jdbcType="INTEGER"/>
+        <result property="username" column="username" jdbcType="VARCHAR"/>
+        <result property="password" column="password" jdbcType="VARCHAR"/>
+        <result property="registerTime" column="register_time" jdbcType="TIMESTAMP"/>
+        <result property="introduce" column="introduce" jdbcType="VARCHAR"/>
+        <result property="image" column="image" jdbcType="VARCHAR"/>
+        <result property="postNum" column="post_num" jdbcType="INTEGER"/>
+        <result property="replyNum" column="reply_num" jdbcType="INTEGER"/>
+        <result property="collectNum" column="collect_num" jdbcType="INTEGER"/>
+    </resultMap>
+
+    <resultMap type="com.example.bbs.entity.Collect" id="TCollectMap">
+        <result property="id" column="id" jdbcType="INTEGER"/>
+        <result property="userId" column="user_id" jdbcType="INTEGER"/>
+        <result property="postId" column="post_id" jdbcType="INTEGER"/>
+        <result property="time" column="time" jdbcType="TIMESTAMP"/>
+    </resultMap>
+
+
+    <!--查看某个用户收藏列表-->
+    <select id="selectCollectPostByUserId" resultMap="TPostMap">
+        select id, title, user_id, section_id, reply_num, view_num, approve_num, collect_num, content, post_time, update_time, image, video, type, status from t_post where id in
+        (select post_id from t_collect where user_id=#{id})
+        limit #{start},#{num}
+    </select>
+
+    <!--查看收藏某个帖子的用户-->
+    <select id="selectCollectUserByPostId" resultMap="TUserMap">
+        select id, username, register_time, introduce, image, post_num, reply_num, collect_num from t_user
+        where id in
+        (select user_id from t_collect where post_id=#{id})
+        limit #{start}, #{num}
+    </select>
+
+    <!--添加收藏-->
+    <insert id="addCollect" keyProperty="id" useGeneratedKeys="true">
+        insert into t_collect(user_id, post_id)
+        values (#{userId},#{postId})
+    </insert>
+
+
+    <!--删除特定收藏-->
+    <delete id="deleteCollect">
+        delete from t_collect where id=#{id}
+    </delete>
+
+    <!--删除某个用户的所有收藏 -->
+    <delete id="deleteCollectByUserId">
+        delete from t_collect where user_id=#{id}
+    </delete>
+
+    <!-- 删除某个帖子的所有收藏者-->
+    <delete id="deleteAllCollectByPostId">
+        delete from t_collect where post_id=#{id}
+    </delete>
+    <!--根据一堆帖子删除-->
+    <delete id="deleteAllCollectByPostIds">
+        delete from t_collect where post_id in #{ids}
+    </delete>
+    <!--根据板块id删除-->
+    <delete id="deleteAllCollectByPlateId">
+        delete from t_collect where post_id in
+            (select id from t_post where section_id in
+                (select id from t_section where plate_id=#{id}))
+    </delete>
+
+    <!--通过分区id删除-->
+    <delete id="deleteAllCollectBySectionId">
+        delete from t_collect where post_id in
+            (select id from t_post where section_id=#{id})
+    </delete>
+
+    <!--根据帖子类型删除-->
+    <delete id="deleteAllCollectByPostType">
+        delete from t_collect where post_id in
+            (select id from t_post where type=#{type})
+    </delete>
+
+    <select id="selectCollectUserIdAndPostId" resultMap="TCollectMap">
+        select user_id, post_id, id, time from t_collect where user_id=#{userId} and post_id=#{postId}
+    </select>
+
+    <!--查询一个用户收藏的所有帖子数量-->
+    <select id="selectAllCollectCountByUserId" resultType="Integer">
+        select count(*) from t_collect where user_id=#{id}
+    </select>
+
+    <!--某个帖子的所有收藏者数量-->
+    <select id="selectAllCollectCountByPostId" resultType="Integer">
+        select count(*) from t_collect where post_id=#{id}
+    </select>
+
+    <!--根据id查找-->
+    <select id="selectCollectById" resultMap="TCollectMap">
+        select id,user_id, post_id, id, time
+        from t_collect where id=#{id}
+    </select>
+
+    <select id="selectCollectByUserIdAndPostId" resultMap="TCollectMap">
+        select id,user_id, post_id, id, time
+        from t_collect where user_id=#{userId} and post_id=#{postId}
+    </select>
+
+    <delete id="deleteCollectByUserIdAndPostId" >
+        delete from t_collect where post_id=#{postId} and user_id=#{userId}
+    </delete>
+</mapper>
