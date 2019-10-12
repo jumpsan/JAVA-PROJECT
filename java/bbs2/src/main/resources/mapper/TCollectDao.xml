@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.bbs.dao.TCollectDao">
+
+
+    <!--查看某个用户收藏列表-->
+    <select id="queryUserId" resultType="tPost">
+        select * from t_post where id in
+        select post_id from t_collect where user_id=#{user_id}
+        limit #{start},#{num}
+    </select>
+
+    <!--查看收藏某个帖子的用户-->
+    <select id="queryByPostId" resultType="tUser">
+        select * from t_user
+        where id in
+        select user_id from t_collect where post_id=#{post_id}
+        limit #{start}, #{num}
+    </select>
+
+    <!--添加收藏-->
+    <insert id="addCollect" keyProperty="Id" useGeneratedKeys="true">
+        insert into t_collect(user_id, post_id)
+        values (#{user_id},#{post_id})
+    </insert>
+
+
+    <!--删除收藏-->
+    <delete id="deleteCollect">
+        delete from t_collect where user_id = #{user_id} and post_id=#{post_id}
+    </delete>
+
+    <!--删除某个用户的所有收藏 -->
+    <delete id="deleteAllCollectByUserId">
+        delete from t_collect where user_id=#{user_id}
+    </delete>
+
+    <!-- 删除某个帖子的所有收藏者-->
+    <delete id="deleteAllCollectByPostId">
+        delete from t_collect where post_id=#{post_id}
+    </delete>
+
+</mapper>
